@@ -1,0 +1,1 @@
+﻿Error reading PDF: 'charmap' codec can't encode characters in position 5683-5685: character maps to <undefined>
