@@ -41,7 +41,7 @@ const onFinish = async (values) => {
 
   } catch (error) {
     console.error(error);
-    message.error("Error submitting pitch ❌");
+    message.error("Error submitting pitch ");
   }
 };
 
