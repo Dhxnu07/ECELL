@@ -18,12 +18,32 @@ const StartupPitchForm = () => {
     setCurrent(current - 1);
   };
 
-  const onFinish = (values) => {
-    console.log('Pitch Submitted:', values);
-    message.success('Pitch submitted successfully! We will review it shortly.');
+const onFinish = async (values) => {
+  try {
+    const response = await fetch(
+      "https://ecell-q711.onrender.com/api/pitches/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to submit pitch");
+    }
+
+    message.success("Pitch submitted successfully!");
     setCurrent(0);
     form.resetFields();
-  };
+
+  } catch (error) {
+    console.error(error);
+    message.error("Error submitting pitch ❌");
+  }
+};
 
   const steps = [
     {
