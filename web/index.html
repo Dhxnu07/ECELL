@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Medical Device Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>🏥 Medical Device Dashboard</h1>
+                <p>Real-time Health Monitoring System</p>
+            </div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-label">Device Status:</span>
+                    <span id="device-status" class="status-online">🟢 Online</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Last Update:</span>
+                    <span id="last-update">00:00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar - Controls -->
+            <aside class="sidebar">
+                <div class="control-panel">
+                    <h3>Device Controls</h3>
+                    
+                    <div class="control-group">
+                        <label for="device-select">Select Device:</label>
+                        <select id="device-select" onchange="selectDevice()">
+                            <option value="192.168.1.100">Device 1 (192.168.1.100)</option>
+                            <option value="192.168.1.101">Device 2 (192.168.1.101)</option>
+                            <option value="192.168.1.102">Device 3 (192.168.1.102)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="refresh-rate">Refresh Rate (sec):</label>
+                        <input type="number" id="refresh-rate" value="2" min="1" max="60" onchange="updateRefreshRate()">
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="startMonitoring()">▶ Start Monitoring</button>
+                        <button class="btn btn-secondary" onclick="stopMonitoring()">⏹ Stop Monitoring</button>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-info" onclick="calibrateDevice()">⚙ Calibrate</button>
+                        <button class="btn btn-warning" onclick="resetDevice()">↻ Reset</button>
+                    </div>
+
+                    <hr>
+
+                    <h3>Alerts & Notifications</h3>
+                    <div class="alert-settings">
+                        <label>
+                            <input type="checkbox" id="alert-hr" checked> HR Alert
+                        </label>
+                        <label>
+                            <input type="checkbox" id="alert-spo2" checked> SpO2 Alert
+                        </label>
+                        <label>
+                            <input type="checkbox" id="alert-temp" checked> Temp Alert
+                        </label>
+                        <label>
+                            <input type="checkbox" id="alert-fall" checked> Fall Alert
+                        </label>
+                    </div>
+
+                    <hr>
+
+                    <h3>Data Export</h3>
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="exportCSV()">📊 Export CSV</button>
+                        <button class="btn btn-success" onclick="exportJSON()">📄 Export JSON</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Dashboard -->
+            <main class="dashboard">
+                <!-- Vital Signs Cards -->
+                <section class="vital-signs">
+                    <div class="card vital-card">
+                        <div class="card-header">❤️ Heart Rate</div>
+                        <div class="card-value" id="heart-rate">-- BPM</div>
+                        <div class="card-status" id="hr-status">Normal</div>
+                        <canvas id="hr-gauge"></canvas>
+                    </div>
+
+                    <div class="card vital-card">
+                        <div class="card-header">🫁 Blood Oxygen (SpO2)</div>
+                        <div class="card-value" id="spo2-value">-- %</div>
+                        <div class="card-status" id="spo2-status">Normal</div>
+                        <canvas id="spo2-gauge"></canvas>
+                    </div>
+
+                    <div class="card vital-card">
+                        <div class="card-header">🌡️ Temperature</div>
+                        <div class="card-value" id="temp-value">-- °C</div>
+                        <div class="card-status" id="temp-status">Normal</div>
+                        <canvas id="temp-gauge"></canvas>
+                    </div>
+
+                    <div class="card vital-card">
+                        <div class="card-header">📍 Activity</div>
+                        <div class="card-value" id="activity-value">Idle</div>
+                        <div class="card-status" id="activity-status">--</div>
+                        <div class="activity-indicator"></div>
+                    </div>
+                </section>
+
+                <!-- Charts Section -->
+                <section class="charts-section">
+                    <div class="card">
+                        <div class="card-header">Heart Rate Trend (Last 24 Hours)</div>
+                        <canvas id="hr-chart"></canvas>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">SpO2 Trend (Last 24 Hours)</div>
+                        <canvas id="spo2-chart"></canvas>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">Temperature Trend (Last 24 Hours)</div>
+                        <canvas id="temp-chart"></canvas>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">Activity Distribution</div>
+                        <canvas id="activity-chart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section class="statistics-section">
+                    <div class="card">
+                        <div class="card-header">Daily Statistics</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Avg HR</span>
+                                <span class="stat-value" id="avg-hr">-- BPM</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Max HR</span>
+                                <span class="stat-value" id="max-hr">-- BPM</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Min HR</span>
+                                <span class="stat-value" id="min-hr">-- BPM</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">HRV</span>
+                                <span class="stat-value" id="hrv">-- ms</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Avg SpO2</span>
+                                <span class="stat-value" id="avg-spo2">-- %</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Steps</span>
+                                <span class="stat-value" id="steps">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alerts Log -->
+                <section class="alerts-section">
+                    <div class="card">
+                        <div class="card-header">Recent Alerts</div>
+                        <div class="alerts-log" id="alerts-log">
+                            <p class="empty-message">No alerts</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
